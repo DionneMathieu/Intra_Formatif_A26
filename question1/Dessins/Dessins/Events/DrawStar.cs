@@ -2,7 +2,7 @@
 {
     public class DrawStar : DrawingEvent
     {
-        public override string Type { get { return "Circle"; } }
+        public override string Type { get { return "Star"; } }
         public int X { get; set; }
         public int Y { get; set; }
         
