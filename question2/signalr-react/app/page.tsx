@@ -26,22 +26,81 @@ export default function Home() {
     .withUrl('http://localhost:5282/hubs/pizza')
     .build();
 
-    // TODO: Mettre isConnected à true seulement une fois que la connection au Hub est faite
-    setIsConnected(true);
+    // Avoir les méthodes qui recoivent réponses AVANT la connection
+    newHubConnection.on("UpdatePizzaPrice", (a:number) => {
+      setPizzaPrice(a);
+      console.log("Prix de la pizza " + a)
+    });
+
+    newHubConnection.on("UpdateMoney", (a:number) => {
+      setMoney(a);
+      console.log("Nouveau total " + a)
+    });
+
+    newHubConnection.on("BuyPizza", (a:number, b:number) => {
+      setNbPizzas(a);
+      setMoney(b);
+      console.log("Nouveau total " + a)
+    });
+
+    newHubConnection.on("UpdateMoneyAndNbPizza", (a:number, b:number) => {
+      setNbPizzas(a);
+      setMoney(b);
+    })
+
+    newHubConnection.on("UpdateNbUsers", (a:number) => {
+      setUserCount(a);
+    })
+
+    setHubConnection(newHubConnection);
+
+    newHubConnection
+      .start()
+      .then(() =>{ 
+        setIsConnected(true)
+        hubConnection?.invoke('UpdateNbUsers')
+          .catch(err => console.log('Error while UpdateNbUsers' + err));
+        console.log("is connected")
+
+        // Si un choix est déjà fait (ex: reconnexion), on l'envoie une fois connecté
+        if (selectedChoice >= 0) {
+          return newHubConnection.invoke('SelectChoice', selectedChoice);
+        }
+
+      })
+      .catch(err => console.log('Error while connection' + err));
   }
 
-  function selectChoice(selectedChoice:number) {
-    setSelectedChoice(selectedChoice);
+  function selectChoice(choice:number) {
+    setSelectedChoice(choice);
+    console.log("Choix de pizza " + (choice))
+
+    // Prévenir le hub du choix (0 = sans ananas, 1 = avec ananas) pour recevoir le prix
+    hubConnection?.invoke('SelectChoice', choice)
+      .catch(err => console.log('Error while SelectChoice' + err));
+    hubConnection?.invoke('UpdateMoneyAndNbPizza', choice)
+      .catch(err => console.log('Error while UpdateMoneyAndNbPizza' + err));
+    hubConnection?.invoke('UpdateNbUsers')
+      .catch(err => console.log('Error while UpdateNbUsers' + err));
+
   }
 
   function unselectChoice() {
+    // Le hub attend le choix actuel (on l'envoie avant de réinitialiser)
+    hubConnection?.invoke('UnselectChoice', selectedChoice)
+      .catch(err => console.log('Error while UnselectChoice' + err));
+
     setSelectedChoice(-1);
   }
 
   function addMoney() {
+    hubConnection?.invoke("UpdateMoney", selectedChoice)
+    .catch(err => console.log('Error while addMoney' + err));
   }
 
   function buyPizza() {
+    hubConnection?.invoke("BuyPizza", selectedChoice)
+    .catch(err => console.log('Error while buypizza' + err));
   }
 
   return (
