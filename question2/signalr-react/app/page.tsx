@@ -26,22 +26,59 @@ export default function Home() {
     .withUrl('http://localhost:5282/hubs/pizza')
     .build();
 
+    newHubConnection.on("UpdateNbUsers", (a:number) => {
+      setUserCount(a);
+      console.log("usercount: " + a)
+    });
+
+
+    newHubConnection.on("UpdateMoney", (a:number) => {
+      setMoney(a);
+      console.log("MoneyPool: " + a)
+    });
+
+    newHubConnection.on("UpdateNbPizzasAndMoney", (a: number, b:number) => {
+      setNbPizzas(a);
+      setMoney(b);
+    })
+
+    newHubConnection.on("UpdatePizzaPrice", (a:number) => {
+      setPizzaPrice(a)
+    });
+
+
+    newHubConnection
+      .start()
+      .then(() => {
+        setIsConnected(true);
+      });
+      setHubConnection(newHubConnection);
+
     // TODO: Mettre isConnected à true seulement une fois que la connection au Hub est faite
-    setIsConnected(true);
   }
 
   function selectChoice(selectedChoice:number) {
     setSelectedChoice(selectedChoice);
+
+    hubConnection?.invoke("SelectChoice", selectedChoice)
+      .catch(err => console.log("Erreur lors de selectChoice: " + err))   
   }
 
   function unselectChoice() {
     setSelectedChoice(-1);
+
+    hubConnection?.invoke("UnselectChoice", selectedChoice)
+      .catch(err => console.log("Erreur lors de unSelectChoice: " + err))  
   }
 
   function addMoney() {
+    hubConnection?.invoke("AddMoney", selectedChoice)
+      .catch(err => console.log("Erreur lors de addMoney: " + err))
   }
 
   function buyPizza() {
+    hubConnection?.invoke("BuyPizza", selectedChoice)
+      .catch(err => console.log("Erreur lors de BuyPizza: " + err))
   }
 
   return (
