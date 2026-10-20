@@ -6,6 +6,8 @@ namespace Dessins.Events
     [JsonDerivedType(typeof(DrawStar))]
     [JsonDerivedType(typeof(DrawSquare))]
     [JsonDerivedType(typeof(Wait))]
+//Ajout du changecolor
+    [JsonDerivedType(typeof(ChangeColor))]
     public abstract class DrawingEvent
     {
         public abstract string Type { get; }
